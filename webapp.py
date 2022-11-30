@@ -1,18 +1,24 @@
-#web scraping
-
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchWindowException
+
 import pandas as pd
-import matplotlib.pyplot as plt
-driver = webdriver.Chrome()
-jobs={"roles":[],
-     "companies":[],
-     "locations":[],
-     "experience":[],
-     "skills":[]}
-for i in range(5):
+from pandas.errors import EmptyDataError 
+import streamlit as st
+
+st.image("CMAbackground.png")
+
+if st.button("Press to Scrape Data"):
+
+    driver = webdriver.Chrome()
+    jobs={"roles":[],
+        "companies":[],
+        "locations":[],
+        "experience":[],
+        "skills":[]}
+    for i in range(1):
         driver.get("https://www.naukri.com/jobs-in-india-{}".format(i))
         time.sleep(3)
         lst=driver.find_elements(By.CSS_SELECTOR, '.jobTuple.bgWhite.br4.mb-8')
@@ -43,60 +49,53 @@ for i in range(5):
                     jobs["locations"].append(y)
 
             except NoSuchElementException:
-                print("Scraping Done")
+                pass
                 break
             except NameError:
                 pass
-print("Scraping Done")
-#CSV implementation
-DS_jobs_df=pd.DataFrame(jobs)
-DS_jobs_df.to_csv("final.csv")
+            except NoSuchWindowException:
+                pass
+
+    DS_jobs_df=pd.DataFrame(jobs)
+    DS_jobs_df.to_csv("final.csv")
+    st.write("Scraping Done")
+    
+
+
 
 data=pd.read_csv("final.csv")
 
-#Manipulating the csv
 
-loc = data["locations"]
+loc=data["locations"]
 comp=data["skills"]
 nameor=data["roles"]
 nameoc=data["companies"]
-res,res2,user,uskill,cskill=[],[],[],[],[]
-a = 'y'
-while (a):
-    user.append("'"+input("Enter Skill: ")+"'")
-    a = input("Do you want to continue? (y/n)")
-    print("\n")
-    if (a=='y'):
-        continue
-    else:
-        break
-    
-# for i in range(5):
-#     user.append("'"+input("Enter Skill: ")+"'")
-# print("\n")
-       
-for i in user:
-    res.append(i.strip('][').split(', '))
-for i in res:
-    uskill.append(i[0])
-uskill=set(uskill)
+
+
+
+
+res,res2,user,uskill,cskill,newx=[],[],[],[],[],[]
+resloc,res2loc,userloc,uloc,cloc=[],[],[],[],[]
+fin,finloc,chos=[],[],[]
 
 
 for i in comp:
     res2.append(i.strip('][').split(', '))
 for i in res2:
+    for j in range(len(i)):
+        i[j]=i[j].replace("'", "")
     x=set(i)
     cskill.append(x)
-    
-fin=[]
-
 for i in cskill:
-    match=len(i.intersection(uskill))
-    c = round(match / len(i), 2)
-    fin.append(float(c))
+    for j in i:
+        chos.append(j)
+uskill=st.multiselect("Select your skill",set(chos))
 
-    
-    
-    
-for i in range(len(nameoc)):
-    print(nameoc[i]," : ",nameor[i]," : ",fin[i]*100, "%")
+if st.button("Compute Probability"):
+    for i in cskill:
+        match=len(i.intersection(uskill))
+        c = round(match / len(i), 2)
+        fin.append((str(round(float(c),2)*100)+'%'))
+
+probab=pd.DataFrame({"Company":nameoc,"Position":nameor,"Probability":fin})
+st.dataframe(probab)
