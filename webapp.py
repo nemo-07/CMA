@@ -3,12 +3,14 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import NoSuchWindowException
-
+import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.errors import EmptyDataError 
 import streamlit as st
 
-st.image("CMAbackground.png")
+st.image("CMAbg.png")
+st.markdown("<h1 style='font-family: Montserrat Semi-Bold; text-align: center; color: white;'>CAREER MARKET ANALYZER</h1>", unsafe_allow_html=True)
+
 
 if st.button("Press to Scrape Data"):
 
@@ -95,7 +97,10 @@ if st.button("Compute Probability"):
     for i in cskill:
         match=len(i.intersection(uskill))
         c = round(match / len(i), 2)
+        newx.append(float(c))
         fin.append((str(round(float(c),2)*100)+'%'))
+
 
 probab=pd.DataFrame({"Company":nameoc,"Position":nameor,"Probability":fin})
 st.dataframe(probab)
+
